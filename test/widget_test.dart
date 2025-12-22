@@ -4,13 +4,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:study_anxiety_app/services/storage_service.dart';
 
 void main() {
-  testWidgets('App should launch', (WidgetTester tester) async {
+  testWidgets('App should launch with STUDY BUDDY header', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final storageService = StorageService(prefs);
 
     await tester.pumpWidget(StudyAnxietyApp(storageService: storageService));
+    await tester.pumpAndSettle();
 
-    expect(find.text('불안해서 공부하는 사람들'), findsOneWidget);
+    // Check for the main header
+    expect(find.text('STUDY BUDDY'), findsOneWidget);
+  });
+
+  testWidgets('App should show study button', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final storageService = StorageService(prefs);
+
+    await tester.pumpWidget(StudyAnxietyApp(storageService: storageService));
+    await tester.pumpAndSettle();
+
+    // Check for study start button
+    expect(find.text('▶ 공부 시작!'), findsOneWidget);
   });
 }

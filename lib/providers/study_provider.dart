@@ -8,14 +8,17 @@ import '../services/storage_service.dart';
 class StudyProvider extends ChangeNotifier {
   final StorageService _storage;
 
+  // Loading state
+  bool _isLoading = true;
+
   // Timer state
   bool _isStudying = false;
   DateTime? _sessionStartTime;
   Duration _currentSessionDuration = Duration.zero;
   Timer? _timer;
 
-  // Character state
-  AnxietyLevel _anxietyLevel = AnxietyLevel.peaceful;
+  // Character state - default to slightlyAnxious until loaded
+  AnxietyLevel _anxietyLevel = AnxietyLevel.slightlyAnxious;
   DateTime? _lastStudyTime;
   Timer? _anxietyTimer;
 
@@ -28,6 +31,7 @@ class StudyProvider extends ChangeNotifier {
   }
 
   // Getters
+  bool get isLoading => _isLoading;
   bool get isStudying => _isStudying;
   Duration get currentSessionDuration => _currentSessionDuration;
   AnxietyLevel get anxietyLevel => _anxietyLevel;
@@ -42,6 +46,7 @@ class StudyProvider extends ChangeNotifier {
     _weeklyStats = await _storage.getDailyStats(7);
     _updateAnxietyLevel();
     _startAnxietyTimer();
+    _isLoading = false;
     notifyListeners();
   }
 

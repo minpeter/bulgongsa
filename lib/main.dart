@@ -152,6 +152,9 @@ class HomeScreen extends StatelessWidget {
       child: SafeArea(
         child: Consumer<StudyProvider>(
           builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return _buildLoadingScreen();
+            }
             return Column(
               children: [
                 const SizedBox(height: 20),
@@ -176,6 +179,35 @@ class HomeScreen extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingScreen() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: _pixelBorder, width: 4),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(child: CupertinoActivityIndicator(radius: 20)),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '로딩 중...',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: _pixelBorder,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -284,7 +316,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildMessageBox(String message) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -324,7 +356,7 @@ class HomeScreen extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
         color: _pixelWarm,
@@ -358,7 +390,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildTimerDisplay(StudyProvider provider) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
         color: _pixelAccent.withOpacity(0.1),
@@ -414,7 +446,7 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           color: color,
@@ -493,7 +525,7 @@ class StatsScreen extends StatelessWidget {
         child: Consumer<StudyProvider>(
           builder: (context, provider, child) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
