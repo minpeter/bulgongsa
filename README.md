@@ -1,5 +1,7 @@
 # 불공사 (FOMO Study)
 
+**불**안해서 **공**부하는 **사**람들
+
 Study timer app for anxiety-driven studiers. Track your study time and watch your character's anxiety level change based on how long you've been slacking off.
 
 ## Features
