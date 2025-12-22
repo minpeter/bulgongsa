@@ -355,69 +355,76 @@ class HomeScreen extends StatelessWidget {
       timeStr = '${seconds}s';
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        color: _pixelWarm,
-        border: Border.all(color: _pixelBorder, width: 2),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('⏱️ ', style: TextStyle(fontSize: 20)),
-          const Text(
-            'TODAY: ',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: _pixelBorder,
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: _pixelWarm,
+          border: Border.all(color: _pixelBorder, width: 2),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('⏱️ ', style: TextStyle(fontSize: 20)),
+            const Text(
+              'TODAY: ',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _pixelBorder,
+              ),
             ),
-          ),
-          Text(
-            timeStr,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: _pixelAccent,
+            Text(
+              timeStr,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: _pixelAccent,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTimerDisplay(StudyProvider provider) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: BoxDecoration(
-        color: _pixelAccent.withOpacity(0.1),
-        border: Border.all(color: _pixelAccent, width: 3),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Column(
-        children: [
-          const Text(
-            '📖 공부 중...',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: _pixelAccent,
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        constraints: const BoxConstraints(maxWidth: 400),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: _pixelAccent.withOpacity(0.1),
+          border: Border.all(color: _pixelAccent, width: 3),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(
+          children: [
+            const Text(
+              '📖 공부 중...',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _pixelAccent,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            provider.formatDuration(provider.currentSessionDuration),
-            style: const TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.w800,
-              color: _pixelBorder,
-              fontFeatures: [FontFeature.tabularFigures()],
+            const SizedBox(height: 8),
+            Text(
+              provider.formatDuration(provider.currentSessionDuration),
+              style: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.w800,
+                color: _pixelBorder,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -443,31 +450,34 @@ class HomeScreen extends StatelessWidget {
     required String label,
     required Color color,
   }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: color,
-          border: Border.all(color: _pixelBorder, width: 3),
-          borderRadius: BorderRadius.circular(4),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x44000000),
-              offset: Offset(3, 3),
-              blurRadius: 0,
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: 1,
+    return Center(
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(color: _pixelBorder, width: 3),
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x44000000),
+                offset: Offset(3, 3),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
             ),
           ),
         ),
