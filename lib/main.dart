@@ -28,7 +28,7 @@ class StudyAnxietyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => StudyProvider(storageService),
       child: const CupertinoApp(
-        title: '불안해서 공부하는 사람들',
+        title: '불공사',
         theme: CupertinoThemeData(
           primaryColor: CupertinoColors.systemBlue,
           brightness: Brightness.light,

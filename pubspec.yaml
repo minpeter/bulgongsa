@@ -1,5 +1,5 @@
 name: study_anxiety_app
-description: "불안해서 공부하는 사람들 - 공부 타이머 앱"
+description: "불공사 - 불안해서 공부하는 사람들"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

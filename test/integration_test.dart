@@ -82,7 +82,13 @@ void main() {
 
   group('Integration - Anxiety Level Logic', () {
     test('when not studying: based on hours since last study', () {
-      // These thresholds determine anxiety when NOT studying
+      // New thresholds (more realistic):
+      // < 2 hours = peaceful
+      // 2-24 hours = slightlyAnxious (same day)
+      // 24-48 hours = anxious (1-2 days)
+      // 48-168 hours = veryAnxious (2-7 days)
+      // 168+ hours = panic (7+ days / a week)
+
       expect(
         AnxietyLevelExtension.fromHoursSinceLastStudy(0),
         equals(AnxietyLevel.peaceful),
@@ -96,15 +102,15 @@ void main() {
         equals(AnxietyLevel.slightlyAnxious),
       );
       expect(
-        AnxietyLevelExtension.fromHoursSinceLastStudy(4),
+        AnxietyLevelExtension.fromHoursSinceLastStudy(24),
         equals(AnxietyLevel.anxious),
       );
       expect(
-        AnxietyLevelExtension.fromHoursSinceLastStudy(8),
+        AnxietyLevelExtension.fromHoursSinceLastStudy(48),
         equals(AnxietyLevel.veryAnxious),
       );
       expect(
-        AnxietyLevelExtension.fromHoursSinceLastStudy(12),
+        AnxietyLevelExtension.fromHoursSinceLastStudy(168),
         equals(AnxietyLevel.panic),
       );
     });

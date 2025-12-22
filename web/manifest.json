@@ -1,11 +1,11 @@
 {
-    "name": "flutter_demo_app",
-    "short_name": "flutter_demo_app",
+    "name": "불공사",
+    "short_name": "불공사",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "불공사 - 불안해서 공부하는 사람들",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
