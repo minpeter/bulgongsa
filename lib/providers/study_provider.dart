@@ -91,20 +91,25 @@ class StudyProvider extends ChangeNotifier {
   }
 
   void _updateAnxietyLevelDuringStudy() {
-    // Calculate potential new level based on study time
-    final currentSessionMinutes = _currentSessionDuration.inMinutes;
+    // Calculate potential new level based on current session study time
+    final currentSessionSeconds = _currentSessionDuration.inSeconds;
     AnxietyLevel potentialLevel;
 
-    if (currentSessionMinutes >= 120) {
+    // Improvement thresholds (more lenient - any study helps!)
+    if (currentSessionSeconds >= 3600) {
+      // 1 hour+ = peaceful
       potentialLevel = AnxietyLevel.peaceful;
-    } else if (currentSessionMinutes >= 60) {
+    } else if (currentSessionSeconds >= 1800) {
+      // 30 min+ = slightly anxious
       potentialLevel = AnxietyLevel.slightlyAnxious;
-    } else if (currentSessionMinutes >= 30) {
+    } else if (currentSessionSeconds >= 600) {
+      // 10 min+ = anxious
       potentialLevel = AnxietyLevel.anxious;
-    } else if (currentSessionMinutes >= 10) {
+    } else if (currentSessionSeconds >= 60) {
+      // 1 min+ = very anxious (at least you started!)
       potentialLevel = AnxietyLevel.veryAnxious;
     } else {
-      // Less than 10 minutes - keep current state
+      // Less than 1 minute - keep current state
       return;
     }
 

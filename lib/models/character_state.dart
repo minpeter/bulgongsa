@@ -1,10 +1,10 @@
 /// Character anxiety states based on study activity
 enum AnxietyLevel {
   peaceful, // Just finished studying or within 2 hours
-  slightlyAnxious, // 2-4 hours since last study
-  anxious, // 4-8 hours since last study
-  veryAnxious, // 8-12 hours since last study
-  panic, // 12+ hours since last study
+  slightlyAnxious, // 2-24 hours since last study (studied today)
+  anxious, // 1-2 days since last study (didn't study today)
+  veryAnxious, // 2-7 days since last study
+  panic, // 7+ days since last study (a week without studying)
 }
 
 extension AnxietyLevelExtension on AnxietyLevel {
@@ -71,15 +71,15 @@ extension AnxietyLevelExtension on AnxietyLevel {
   /// Calculate anxiety level based on hours since last study
   static AnxietyLevel fromHoursSinceLastStudy(double hours) {
     if (hours < 2) {
-      return AnxietyLevel.peaceful;
-    } else if (hours < 4) {
-      return AnxietyLevel.slightlyAnxious;
-    } else if (hours < 8) {
-      return AnxietyLevel.anxious;
-    } else if (hours < 12) {
-      return AnxietyLevel.veryAnxious;
+      return AnxietyLevel.peaceful; // Within 2 hours
+    } else if (hours < 24) {
+      return AnxietyLevel.slightlyAnxious; // Same day, but a while ago
+    } else if (hours < 48) {
+      return AnxietyLevel.anxious; // 1-2 days
+    } else if (hours < 168) {
+      return AnxietyLevel.veryAnxious; // 2-7 days
     } else {
-      return AnxietyLevel.panic;
+      return AnxietyLevel.panic; // 7+ days (a week)
     }
   }
 }
