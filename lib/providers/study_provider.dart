@@ -20,7 +20,7 @@ class StudyProvider extends ChangeNotifier {
   Timer? _anxietyTimer;
 
   // Stats
-  int _todayMinutes = 0;
+  int _todaySeconds = 0;
   List<DailyStats> _weeklyStats = [];
 
   StudyProvider(this._storage) {
@@ -31,13 +31,14 @@ class StudyProvider extends ChangeNotifier {
   bool get isStudying => _isStudying;
   Duration get currentSessionDuration => _currentSessionDuration;
   AnxietyLevel get anxietyLevel => _anxietyLevel;
-  int get todayMinutes => _todayMinutes;
+  int get todaySeconds => _todaySeconds;
+  int get todayMinutes => _todaySeconds ~/ 60;
   List<DailyStats> get weeklyStats => _weeklyStats;
   DateTime? get lastStudyTime => _lastStudyTime;
 
   Future<void> _initializeState() async {
     _lastStudyTime = _storage.getLastStudyTime();
-    _todayMinutes = await _storage.getTodayTotalMinutes();
+    _todaySeconds = await _storage.getTodayTotalSeconds();
     _weeklyStats = await _storage.getDailyStats(7);
     _updateAnxietyLevel();
     _startAnxietyTimer();
@@ -74,7 +75,9 @@ class StudyProvider extends ChangeNotifier {
     _isStudying = true;
     _sessionStartTime = DateTime.now();
     _currentSessionDuration = Duration.zero;
-    // Don't change anxiety level immediately - it will update based on study duration
+
+    // Update anxiety level immediately when starting
+    _updateAnxietyLevelDuringStudy();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _currentSessionDuration = DateTime.now().difference(_sessionStartTime!);
@@ -88,7 +91,7 @@ class StudyProvider extends ChangeNotifier {
   void _updateAnxietyLevelDuringStudy() {
     // Calculate total study time including current session
     final currentSessionMinutes = _currentSessionDuration.inMinutes;
-    final totalTodayMinutes = _todayMinutes + currentSessionMinutes;
+    final totalTodayMinutes = todayMinutes + currentSessionMinutes;
 
     // Anxiety decreases as you study more
     if (totalTodayMinutes >= 120) {
@@ -100,11 +103,8 @@ class StudyProvider extends ChangeNotifier {
     } else if (totalTodayMinutes >= 10) {
       _anxietyLevel = AnxietyLevel.veryAnxious;
     } else {
-      // Keep current anxiety level from before studying
-      // Only update if we haven't studied much yet
-      if (_lastStudyTime == null) {
-        _anxietyLevel = AnxietyLevel.veryAnxious;
-      }
+      // Less than 10 minutes studied today - keep panic state
+      _anxietyLevel = AnxietyLevel.panic;
     }
   }
 
@@ -116,19 +116,20 @@ class StudyProvider extends ChangeNotifier {
     _isStudying = false;
 
     final endTime = DateTime.now();
-    final durationMinutes = _currentSessionDuration.inMinutes;
+    final durationSeconds = _currentSessionDuration.inSeconds;
 
-    if (durationMinutes > 0) {
+    // Always save session even if less than 1 minute
+    if (durationSeconds > 0) {
       final session = StudySession(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         startTime: _sessionStartTime!,
         endTime: endTime,
-        durationMinutes: durationMinutes,
+        durationSeconds: durationSeconds,
       );
 
       await _storage.saveSession(session);
       _lastStudyTime = endTime;
-      _todayMinutes = await _storage.getTodayTotalMinutes();
+      _todaySeconds = await _storage.getTodayTotalSeconds();
       _weeklyStats = await _storage.getDailyStats(7);
     }
 
@@ -140,7 +141,7 @@ class StudyProvider extends ChangeNotifier {
 
   // Refresh stats
   Future<void> refreshStats() async {
-    _todayMinutes = await _storage.getTodayTotalMinutes();
+    _todaySeconds = await _storage.getTodayTotalSeconds();
     _weeklyStats = await _storage.getDailyStats(7);
     notifyListeners();
   }

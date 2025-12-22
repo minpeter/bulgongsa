@@ -62,15 +62,15 @@ class StorageService {
         return sessionDate.isAtSameMomentAs(date);
       }).toList();
 
-      final totalMinutes = daySessions.fold<int>(
+      final totalSeconds = daySessions.fold<int>(
         0,
-        (sum, s) => sum + s.durationMinutes,
+        (sum, s) => sum + s.durationSeconds,
       );
 
       stats.add(
         DailyStats(
           date: date,
-          totalMinutes: totalMinutes,
+          totalSeconds: totalSeconds,
           sessionCount: daySessions.length,
         ),
       );
@@ -79,8 +79,8 @@ class StorageService {
     return stats.reversed.toList();
   }
 
-  // Get today's total study time in minutes
-  Future<int> getTodayTotalMinutes() async {
+  // Get today's total study time in seconds
+  Future<int> getTodayTotalSeconds() async {
     final sessions = await getSessions();
     final today = DateTime.now();
     final todaySessions = sessions.where((s) {
@@ -89,13 +89,25 @@ class StorageService {
           s.startTime.day == today.day;
     }).toList();
 
-    return todaySessions.fold<int>(0, (sum, s) => sum + s.durationMinutes);
+    return todaySessions.fold<int>(0, (sum, s) => sum + s.durationSeconds);
   }
 
-  // Get total study time in minutes (all time)
-  Future<int> getTotalMinutes() async {
+  // Get today's total study time in minutes (for backward compatibility)
+  Future<int> getTodayTotalMinutes() async {
+    final seconds = await getTodayTotalSeconds();
+    return seconds ~/ 60;
+  }
+
+  // Get total study time in seconds (all time)
+  Future<int> getTotalSeconds() async {
     final sessions = await getSessions();
-    return sessions.fold<int>(0, (sum, s) => sum + s.durationMinutes);
+    return sessions.fold<int>(0, (sum, s) => sum + s.durationSeconds);
+  }
+
+  // Get total study time in minutes (all time) - backward compatibility
+  Future<int> getTotalMinutes() async {
+    final seconds = await getTotalSeconds();
+    return seconds ~/ 60;
   }
 
   // Clear all data (for testing)

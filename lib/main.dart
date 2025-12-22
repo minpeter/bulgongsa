@@ -309,9 +309,19 @@ class HomeScreen extends StatelessWidget {
       return _buildTimerDisplay(provider);
     }
 
-    final hours = provider.todayMinutes ~/ 60;
-    final minutes = provider.todayMinutes % 60;
-    final timeStr = hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
+    final totalSeconds = provider.todaySeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    String timeStr;
+    if (hours > 0) {
+      timeStr = '${hours}h ${minutes}m';
+    } else if (minutes > 0) {
+      timeStr = '${minutes}m ${seconds}s';
+    } else {
+      timeStr = '${seconds}s';
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 32),
