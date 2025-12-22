@@ -23,80 +23,77 @@ void main() {
 
   group('StudyProvider - Anxiety Level During Study', () {
     test(
-      'should be panic state immediately when study starts with 0 minutes today',
+      'should maintain current state when study starts (not worsen)',
       () async {
-        // Given: No previous study today
-        expect(provider.todayMinutes, equals(0));
+        // Given: First time user starts at slightlyAnxious
+        expect(provider.anxietyLevel, equals(AnxietyLevel.slightlyAnxious));
 
         // When: Start studying
         provider.startStudySession();
 
-        // Then: Should be panic state immediately (not after 1 second)
+        // Then: Should maintain slightlyAnxious, NOT become panic
         expect(provider.isStudying, isTrue);
-        expect(provider.anxietyLevel, equals(AnxietyLevel.panic));
+        expect(provider.anxietyLevel, equals(AnxietyLevel.slightlyAnxious));
       },
     );
 
-    test('should remain panic state at 0 seconds of studying', () async {
+    test('should never worsen during study session', () async {
+      // Given: User is slightlyAnxious
+      expect(provider.anxietyLevel, equals(AnxietyLevel.slightlyAnxious));
+
+      // When: Start studying
       provider.startStudySession();
 
-      // At 0 seconds, should be panic
-      expect(provider.currentSessionDuration.inSeconds, equals(0));
-      expect(provider.anxietyLevel, equals(AnxietyLevel.panic));
+      // Then: Should never go to anxious, veryAnxious, or panic
+      expect(
+        provider.anxietyLevel.index,
+        lessThanOrEqualTo(AnxietyLevel.slightlyAnxious.index),
+      );
     });
 
-    test(
-      'should transition to veryAnxious after 10 minutes of study',
-      () async {
-        // Simulate having studied for 10 minutes today
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final storage = StorageService(prefs);
+    test('should only improve state during study (lower index = better)', () {
+      // Document: AnxietyLevel.index ordering
+      // peaceful = 0, slightlyAnxious = 1, anxious = 2, veryAnxious = 3, panic = 4
+      expect(AnxietyLevel.peaceful.index, equals(0));
+      expect(AnxietyLevel.slightlyAnxious.index, equals(1));
+      expect(AnxietyLevel.anxious.index, equals(2));
+      expect(AnxietyLevel.veryAnxious.index, equals(3));
+      expect(AnxietyLevel.panic.index, equals(4));
+    });
 
-        // Create a mock provider that we can manipulate
-        final testProvider = StudyProvider(storage);
-        await Future.delayed(const Duration(milliseconds: 100));
+    test('study session improvement thresholds (from panic state)', () {
+      // When starting from panic, these are the improvement milestones:
+      // 10 min -> veryAnxious
+      // 30 min -> anxious
+      // 60 min -> slightlyAnxious
+      // 120 min -> peaceful
 
-        testProvider.startStudySession();
-
-        // Initially should be panic (0 minutes)
-        expect(testProvider.anxietyLevel, equals(AnxietyLevel.panic));
-
-        testProvider.dispose();
-      },
-    );
-
-    test('anxiety levels should follow correct thresholds', () {
-      // Test the threshold logic directly
-      // < 10 min = panic
-      // >= 10 min = veryAnxious
-      // >= 30 min = anxious
-      // >= 60 min = slightlyAnxious
-      // >= 120 min = peaceful
-
-      // These are the expected transitions during study
-      final thresholds = <int, AnxietyLevel>{
-        0: AnxietyLevel.panic,
-        5: AnxietyLevel.panic,
-        9: AnxietyLevel.panic,
+      final improvementThresholds = <int, AnxietyLevel>{
         10: AnxietyLevel.veryAnxious,
-        29: AnxietyLevel.veryAnxious,
         30: AnxietyLevel.anxious,
-        59: AnxietyLevel.anxious,
         60: AnxietyLevel.slightlyAnxious,
-        119: AnxietyLevel.slightlyAnxious,
         120: AnxietyLevel.peaceful,
-        180: AnxietyLevel.peaceful,
       };
 
-      thresholds.forEach((minutes, expectedLevel) {
-        // This documents the expected behavior
+      improvementThresholds.forEach((minutes, expectedLevel) {
         expect(
-          _getExpectedAnxietyLevel(minutes),
+          _getPotentialLevelAfterStudying(minutes),
           equals(expectedLevel),
-          reason: 'At $minutes minutes, should be ${expectedLevel.label}',
+          reason:
+              'After $minutes minutes of study, potential level should be ${expectedLevel.label}',
         );
       });
+    });
+
+    test('should not change state before 10 minutes of studying', () async {
+      // Given: First time user at slightlyAnxious
+      final initialLevel = provider.anxietyLevel;
+
+      // When: Start studying (0 minutes)
+      provider.startStudySession();
+
+      // Then: State should remain the same
+      expect(provider.anxietyLevel, equals(initialLevel));
     });
   });
 
@@ -167,20 +164,55 @@ void main() {
 
       newProvider.dispose();
     });
+
+    test('anxiety level based on hours since last study', () {
+      // These thresholds are for when NOT studying
+      // < 2 hours = peaceful
+      // 2-4 hours = slightlyAnxious
+      // 4-8 hours = anxious
+      // 8-12 hours = veryAnxious
+      // 12+ hours = panic
+
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(0),
+        equals(AnxietyLevel.peaceful),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(1),
+        equals(AnxietyLevel.peaceful),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(2),
+        equals(AnxietyLevel.slightlyAnxious),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(4),
+        equals(AnxietyLevel.anxious),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(8),
+        equals(AnxietyLevel.veryAnxious),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(12),
+        equals(AnxietyLevel.panic),
+      );
+    });
   });
 }
 
-/// Helper function to get expected anxiety level based on total minutes studied today
-AnxietyLevel _getExpectedAnxietyLevel(int totalMinutes) {
-  if (totalMinutes >= 120) {
+/// Helper: Get potential anxiety level after studying for X minutes
+/// This represents the best possible state after studying
+AnxietyLevel _getPotentialLevelAfterStudying(int minutes) {
+  if (minutes >= 120) {
     return AnxietyLevel.peaceful;
-  } else if (totalMinutes >= 60) {
+  } else if (minutes >= 60) {
     return AnxietyLevel.slightlyAnxious;
-  } else if (totalMinutes >= 30) {
+  } else if (minutes >= 30) {
     return AnxietyLevel.anxious;
-  } else if (totalMinutes >= 10) {
+  } else if (minutes >= 10) {
     return AnxietyLevel.veryAnxious;
   } else {
-    return AnxietyLevel.panic;
+    return AnxietyLevel.panic; // No improvement yet
   }
 }

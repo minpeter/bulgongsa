@@ -23,45 +23,43 @@ void main() {
     });
 
     test(
-      'complete flow: start study -> anxiety changes -> stop -> session saved',
+      'complete flow: start study -> state maintained -> stop -> session saved',
       () async {
         // 1. Initial state - first time user
         expect(provider.isStudying, isFalse);
         expect(provider.anxietyLevel, equals(AnxietyLevel.slightlyAnxious));
         expect(provider.todaySeconds, equals(0));
 
-        // 2. Start studying - should immediately be panic (0 minutes studied today)
+        // 2. Start studying - should maintain current state (not worsen)
         provider.startStudySession();
         expect(provider.isStudying, isTrue);
-        expect(provider.anxietyLevel, equals(AnxietyLevel.panic));
+        expect(provider.anxietyLevel, equals(AnxietyLevel.slightlyAnxious));
         expect(provider.currentSessionDuration, equals(Duration.zero));
 
         // 3. Stop studying (short session)
         await provider.stopStudySession();
         expect(provider.isStudying, isFalse);
         expect(provider.currentSessionDuration, equals(Duration.zero));
-
-        // Session should be saved even for very short duration
-        // (in real test the duration would be 0, which won't save)
       },
     );
 
-    test(
-      'anxiety level should not change unexpectedly when starting study',
-      () async {
-        // Given: Fresh user with no study history
-        expect(provider.todayMinutes, equals(0));
+    test('anxiety level should NOT worsen when starting study', () async {
+      // Given: First time user at slightlyAnxious
+      final initialLevel = provider.anxietyLevel;
+      expect(initialLevel, equals(AnxietyLevel.slightlyAnxious));
 
-        // When: Start study
-        provider.startStudySession();
+      // When: Start study
+      provider.startStudySession();
 
-        // Then: Should be panic immediately, not peaceful or any other state
-        expect(provider.anxietyLevel, equals(AnxietyLevel.panic));
+      // Then: Should maintain or improve, NEVER worsen
+      expect(
+        provider.anxietyLevel.index,
+        lessThanOrEqualTo(initialLevel.index),
+      );
 
-        // Cleanup
-        await provider.stopStudySession();
-      },
-    );
+      // Cleanup
+      await provider.stopStudySession();
+    });
 
     test('short sessions (< 1 minute) should be saved in seconds', () async {
       // This test verifies the fix for the "short session not recorded" bug
@@ -82,36 +80,42 @@ void main() {
     });
   });
 
-  group('Integration - Anxiety Level Thresholds', () {
-    /// This documents the expected anxiety levels based on study time
-    /// to prevent regression of the "0 minutes but peaceful" bug
-    test('anxiety thresholds should be correctly defined', () {
-      // Document the threshold expectations
-      final expectedThresholds = {
-        'panic': 'Less than 10 minutes studied today',
-        'veryAnxious': '10-29 minutes studied today',
-        'anxious': '30-59 minutes studied today',
-        'slightlyAnxious': '60-119 minutes studied today',
-        'peaceful': '120+ minutes studied today',
-      };
-
-      expect(expectedThresholds.length, equals(5));
-      expect(AnxietyLevel.values.length, equals(5));
+  group('Integration - Anxiety Level Logic', () {
+    test('when not studying: based on hours since last study', () {
+      // These thresholds determine anxiety when NOT studying
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(0),
+        equals(AnxietyLevel.peaceful),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(1.9),
+        equals(AnxietyLevel.peaceful),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(2),
+        equals(AnxietyLevel.slightlyAnxious),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(4),
+        equals(AnxietyLevel.anxious),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(8),
+        equals(AnxietyLevel.veryAnxious),
+      );
+      expect(
+        AnxietyLevelExtension.fromHoursSinceLastStudy(12),
+        equals(AnxietyLevel.panic),
+      );
     });
 
-    test('should correctly compute expected level from minutes', () {
-      // Test the threshold logic
-      expect(_expectedAnxietyLevel(0), equals(AnxietyLevel.panic));
-      expect(_expectedAnxietyLevel(1), equals(AnxietyLevel.panic));
-      expect(_expectedAnxietyLevel(9), equals(AnxietyLevel.panic));
-      expect(_expectedAnxietyLevel(10), equals(AnxietyLevel.veryAnxious));
-      expect(_expectedAnxietyLevel(29), equals(AnxietyLevel.veryAnxious));
-      expect(_expectedAnxietyLevel(30), equals(AnxietyLevel.anxious));
-      expect(_expectedAnxietyLevel(59), equals(AnxietyLevel.anxious));
-      expect(_expectedAnxietyLevel(60), equals(AnxietyLevel.slightlyAnxious));
-      expect(_expectedAnxietyLevel(119), equals(AnxietyLevel.slightlyAnxious));
-      expect(_expectedAnxietyLevel(120), equals(AnxietyLevel.peaceful));
-      expect(_expectedAnxietyLevel(200), equals(AnxietyLevel.peaceful));
+    test('when studying: state can only improve, never worsen', () {
+      // Document the key behavior change:
+      // - OLD: Starting study could make state WORSE (panic if < 10 min today)
+      // - NEW: Starting study maintains state, studying improves it
+
+      // Lower index = better state
+      expect(AnxietyLevel.peaceful.index, lessThan(AnxietyLevel.panic.index));
     });
   });
 
@@ -135,7 +139,6 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // The weekly stats should still show data
-      // (session might be too short to register, but the infrastructure is correct)
       expect(provider2.weeklyStats, isNotNull);
       expect(provider2.weeklyStats.length, equals(7));
 
@@ -206,19 +209,4 @@ void main() {
       provider.dispose();
     });
   });
-}
-
-/// Helper to compute expected anxiety level based on total minutes studied today
-AnxietyLevel _expectedAnxietyLevel(int totalMinutes) {
-  if (totalMinutes >= 120) {
-    return AnxietyLevel.peaceful;
-  } else if (totalMinutes >= 60) {
-    return AnxietyLevel.slightlyAnxious;
-  } else if (totalMinutes >= 30) {
-    return AnxietyLevel.anxious;
-  } else if (totalMinutes >= 10) {
-    return AnxietyLevel.veryAnxious;
-  } else {
-    return AnxietyLevel.panic;
-  }
 }

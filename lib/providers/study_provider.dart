@@ -81,9 +81,6 @@ class StudyProvider extends ChangeNotifier {
     _sessionStartTime = DateTime.now();
     _currentSessionDuration = Duration.zero;
 
-    // Update anxiety level immediately when starting
-    _updateAnxietyLevelDuringStudy();
-
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _currentSessionDuration = DateTime.now().difference(_sessionStartTime!);
       _updateAnxietyLevelDuringStudy();
@@ -94,22 +91,26 @@ class StudyProvider extends ChangeNotifier {
   }
 
   void _updateAnxietyLevelDuringStudy() {
-    // Calculate total study time including current session
+    // Calculate potential new level based on study time
     final currentSessionMinutes = _currentSessionDuration.inMinutes;
-    final totalTodayMinutes = todayMinutes + currentSessionMinutes;
+    AnxietyLevel potentialLevel;
 
-    // Anxiety decreases as you study more
-    if (totalTodayMinutes >= 120) {
-      _anxietyLevel = AnxietyLevel.peaceful;
-    } else if (totalTodayMinutes >= 60) {
-      _anxietyLevel = AnxietyLevel.slightlyAnxious;
-    } else if (totalTodayMinutes >= 30) {
-      _anxietyLevel = AnxietyLevel.anxious;
-    } else if (totalTodayMinutes >= 10) {
-      _anxietyLevel = AnxietyLevel.veryAnxious;
+    if (currentSessionMinutes >= 120) {
+      potentialLevel = AnxietyLevel.peaceful;
+    } else if (currentSessionMinutes >= 60) {
+      potentialLevel = AnxietyLevel.slightlyAnxious;
+    } else if (currentSessionMinutes >= 30) {
+      potentialLevel = AnxietyLevel.anxious;
+    } else if (currentSessionMinutes >= 10) {
+      potentialLevel = AnxietyLevel.veryAnxious;
     } else {
-      // Less than 10 minutes studied today - keep panic state
-      _anxietyLevel = AnxietyLevel.panic;
+      // Less than 10 minutes - keep current state
+      return;
+    }
+
+    // Only improve, never worsen (lower index = better state)
+    if (potentialLevel.index < _anxietyLevel.index) {
+      _anxietyLevel = potentialLevel;
     }
   }
 
