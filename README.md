@@ -1,16 +1,16 @@
-# flutter_demo_app
+# 불공사 (FOMO Study)
 
-A new Flutter project.
+Study timer app for anxiety-driven studiers. Track your study time and watch your character's anxiety level change based on how long you've been slacking off.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Study session timer with start/stop
+- Character that reflects your study anxiety level (peaceful → panic)
+- Daily and weekly statistics with charts
+- Local data persistence
 
-A few resources to get you started if this is your first Flutter project:
+## Run
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run
+```
